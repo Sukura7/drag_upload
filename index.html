@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>带进度条的Bootstrap上传</title>
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <link href="http://cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+  .list-group {
+    border: 2px dashed #ccc;
+    min-height: 100px;
+    padding: 10px;
+  }
+  .list-group p {
+    color: #ccc;
+    line-height: 100px;
+    font-size: 30px;
+    text-align: center;
+  }
+  img {
+    max-width:100%;
+  }
+  #eventstatus {
+    margin-top:10px;
+  }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row">
+      <ul class="list-group clearfix"></ul>
+      <form action="" name="upload">
+        <a href="javascript:;" class="btn btn-primary" id="selectbtn">上传文件</a>
+        <input type="file" style="display:none;" name="fileselect" multiple>
+      </form>
+      <div id="eventstatus"></div>
+    </div>
+  </div>
+  <script>
+  const listGroup = document.querySelector('.list-group');
+  const oFileInput= document.forms['upload']['fileselect'];
+  const oEventStatus =document.getElementById('eventstatus');
+  document.getElementById('selectbtn').addEventListener('click', () => {
+      oFileInput.click();
+    },false);
+  oFileInput.addEventListener('change',displayFileInfo, false);
+  function displayFileInfo(event) {
+    event.preventDefault();
+    let files = event.target.files
+     || event.dataTransfer.files;
+    console.log(files)
+    for(let file of files) {
+      let li = document.createElement('li'),
+        img = document.createElement('img'),
+        thumbnailContainer = document.createElement('div');
+      // 调用URL.createObjectURL创建URL对象
+      url = window.URL.createObjectURL(file);
+      console.log(url)
+      // img.src = "https://sfault-avatar.b0.upaiyun.com/249/954/249954451-58ddf75aae082_big64"
+      thumbnailContainer.appendChild(img);
+      img.classList.add('thumbnail');
+      img.src = url;
+      img.onload = function() {
+        window.URL.revokeObjectURL(url);
+      }
+      thumbnailContainer.classList.add('col-md-3');
+      listGroup.appendChild(thumbnailContainer);
+
+      // 进度条
+      let progressBar = document.createElement('div');
+      progressBar.classList.add('progress-bar');
+      let progress = document.createElement('div');
+      progress.classList.add('progress','progress-striped','active');
+      progress.appendChild(progressBar);
+
+      // 读取文件
+      // FileReader 文件API提供读取文件的方法和包含结果的事件模型
+      let reader = new FileReader();
+      reader.readAsBinaryString(file);
+      // 开始加载
+      reader.onloadstart = function() {
+        oEventStatus.appendChild(progress);
+      }
+      // 读取中
+      reader.onprogress = function(event) {
+        let progressStatus =
+         Math.round(event.loaded/event.total*100) + '%'
+         progressBar.style.width = progressStatus;
+         progressBar.innerHTML=progressStatus;
+
+      }
+      // 读取完成
+      reader.onload = function() {
+        console.log('读取完成');
+      }
+    }
+
+  }
+  listGroup.innerHTML='<p class="hint">拖放文件到这里</p>';
+  // 允许拖拽的容器
+  listGroup.addEventListener('dragover',(event)=>{
+    event.preventDefault();
+    document.querySelector('.hint').innerHTML='松手上传文件';
+  })
+  listGroup.addEventListener('dragleave',(event)=>{
+    document.querySelector('.hint').innerHTML='拖放文件到这里';
+  })
+  listGroup.addEventListener('drop',displayFileInfo,false);
+
+  </script>
+</body>
+</html>
